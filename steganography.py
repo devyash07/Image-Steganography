@@ -42,7 +42,7 @@ def get_max_message_size(image: Image.Image, password: str = "") -> int:
     
     Args:
         image: PIL Image object
-        password: Optional password (adds 32 bytes for hash)
+        password: Password (not used in calculation, kept for API compatibility)
         
     Returns:
         Maximum number of bytes that can be stored (accounts for length prefix and password hash)
@@ -51,7 +51,7 @@ def get_max_message_size(image: Image.Image, password: str = "") -> int:
     # Each pixel has 3 channels (RGB), each channel can store 1 bit
     total_bits = width * height * 3
     # Total bytes = bits / 8, minus 4 bytes reserved for length prefix
-    # Always reserve 32 bytes for password hash (even if empty)
+    # Always reserve 32 bytes for password hash (required)
     reserved_bytes = BYTES_FOR_LENGTH + PASSWORD_HASH_SIZE
     
     total_bytes = total_bits // 8
@@ -59,23 +59,23 @@ def get_max_message_size(image: Image.Image, password: str = "") -> int:
     return max(0, max_message_bytes)
 
 
-def hide_message(image: Image.Image, message: str, password: str = "") -> Image.Image:
+def hide_message(image: Image.Image, message: str, password: str) -> Image.Image:
     """
     Hide a secret message inside an image using LSB steganography.
     Works with any image format (JPEG, PNG, BMP, GIF, TIFF, etc.)
     automatically converts to RGB for processing.
-    Optionally protects the message with a password.
+    Password protection is required.
     
     Args:
         image: PIL Image object (any format, will be converted to RGB)
         message: Secret message string to hide
-        password: Optional password to protect the message
+        password: Password to protect the message (required, cannot be empty)
         
     Returns:
         New PIL Image with the hidden message (RGB format)
         
     Raises:
-        ValueError: If message is too large for the image
+        ValueError: If message is too large for the image or password is empty
         TypeError: If image is not a valid PIL Image
     """
     # Validate inputs
@@ -84,6 +84,9 @@ def hide_message(image: Image.Image, message: str, password: str = "") -> Image.
     
     if not isinstance(message, str):
         raise TypeError("Message must be a string")
+    
+    if not password or not isinstance(password, str):
+        raise ValueError("Password is required and must be a non-empty string")
     
     # Convert message to UTF-8 bytes
     message_bytes = message.encode('utf-8')
@@ -109,13 +112,9 @@ def hide_message(image: Image.Image, message: str, password: str = "") -> Image.
     # Prepare data to hide
     data_to_hide = message_length.to_bytes(BYTES_FOR_LENGTH, byteorder='big')
     
-    # Add password hash if provided
-    if password:
-        pwd_hash = hash_password(password)
-        data_to_hide += pwd_hash
-    else:
-        # Add empty hash marker if no password
-        data_to_hide += b'\x00' * PASSWORD_HASH_SIZE
+    # Add password hash (now always required)
+    pwd_hash = hash_password(password)
+    data_to_hide += pwd_hash
     
     data_to_hide += message_bytes
     
@@ -144,17 +143,17 @@ def hide_message(image: Image.Image, message: str, password: str = "") -> Image.
     return stego_image
 
 
-def extract_message(image: Image.Image, password: str = "") -> str:
+def extract_message(image: Image.Image, password: str) -> str:
     """
     Extract a hidden message from an image using LSB steganography.
     Works with any image format (JPEG, PNG, BMP, GIF, TIFF, etc.)
     automatically converts to RGB for processing.
     
-    If a password was used during hiding, it must be provided to extract.
+    Password is required to extract the message.
     
     Args:
         image: PIL Image object containing a hidden message (any format)
-        password: Optional password (must match the one used during hiding)
+        password: Password to decrypt the message (required, must match the one used during hiding)
         
     Returns:
         Extracted message string
@@ -166,6 +165,9 @@ def extract_message(image: Image.Image, password: str = "") -> str:
     # Validate input
     if not isinstance(image, Image.Image):
         raise TypeError("Image must be a PIL Image object")
+    
+    if not password or not isinstance(password, str):
+        raise ValueError("Password is required and must be a non-empty string")
     
     # Convert image to RGB mode if needed (handles JPEG, RGBA, grayscale, etc.)
     if image.mode != 'RGB':
@@ -212,15 +214,10 @@ def extract_message(image: Image.Image, password: str = "") -> str:
         if len(byte_bits) == 8:
             stored_hash.append(int(byte_bits, 2))
     
-    # Verify password if provided
-    if password:
-        pwd_hash = hash_password(password)
-        if bytes(stored_hash) != pwd_hash:
-            raise ValueError("❌ Incorrect password! Cannot extract message.")
-    else:
-        # Check if a password was used (hash should not be all zeros)
-        if bytes(stored_hash) != b'\x00' * PASSWORD_HASH_SIZE:
-            raise ValueError("⚠️ This message is password protected. Please provide the correct password.")
+    # Verify password (password is now required)
+    pwd_hash = hash_password(password)
+    if bytes(stored_hash) != pwd_hash:
+        raise ValueError("❌ Incorrect password! Cannot extract message.")
     
     # Extract message bytes
     message_start = BYTES_FOR_LENGTH * 8 + PASSWORD_HASH_SIZE * 8

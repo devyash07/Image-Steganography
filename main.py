@@ -113,19 +113,19 @@ class SteganographyApp:
         self.hide_capacity_label.grid(row=5, column=0, sticky="w", pady=(0, 15))
         
         # Password section
-        ttk.Label(parent, text="Step 3: Optional Password Protection", 
+        ttk.Label(parent, text="Step 3: Enter Password", 
                  font=("Arial", 14, "bold")).grid(row=6, column=0, sticky="w", pady=(0, 10))
         
         pwd_frame = ttk.Frame(parent)
         pwd_frame.grid(row=7, column=0, sticky="ew", pady=(0, 15))
         pwd_frame.columnconfigure(1, weight=1)
         
-        ttk.Label(pwd_frame, text="Password (optional):", font=("Arial", 12)).grid(row=0, column=0, sticky="w", padx=(0, 10))
+        ttk.Label(pwd_frame, text="Password (required):", font=("Arial", 12)).grid(row=0, column=0, sticky="w", padx=(0, 10))
         
         self.hide_password_text = ttk.Entry(pwd_frame, show="*", font=("Arial", 12))
         self.hide_password_text.grid(row=0, column=1, sticky="ew", padx=(0, 10))
         
-        ttk.Label(pwd_frame, text="Leave empty for no password", font=("Arial", 10), foreground="#666666").grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
+        ttk.Label(pwd_frame, text="Enter a strong password to protect your message", font=("Arial", 10), foreground="#666666").grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
         
         # Buttons frame
         button_frame = ttk.Frame(parent)
@@ -162,19 +162,19 @@ class SteganographyApp:
         self.extract_image_label.grid(row=0, column=1, sticky="w", padx=10)
         
         # Password section
-        ttk.Label(parent, text="Step 2: Enter Password (if used)", 
+        ttk.Label(parent, text="Step 2: Enter Password", 
                  font=("Arial", 14, "bold")).grid(row=2, column=0, sticky="w", pady=(0, 10))
         
         pwd_frame = ttk.Frame(parent)
         pwd_frame.grid(row=3, column=0, sticky="ew", pady=(0, 15))
         pwd_frame.columnconfigure(1, weight=1)
         
-        ttk.Label(pwd_frame, text="Password (optional):", font=("Arial", 12)).grid(row=0, column=0, sticky="w", padx=(0, 10))
+        ttk.Label(pwd_frame, text="Password (required):", font=("Arial", 12)).grid(row=0, column=0, sticky="w", padx=(0, 10))
         
         self.extract_password_text = ttk.Entry(pwd_frame, show="*", font=("Arial", 12))
         self.extract_password_text.grid(row=0, column=1, sticky="ew", padx=(0, 10))
         
-        ttk.Label(pwd_frame, text="Leave empty if no password was used", font=("Arial", 10), foreground="#666666").grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
+        ttk.Label(pwd_frame, text="Enter the password used to hide the message", font=("Arial", 10), foreground="#666666").grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
         
         # Message display section
         ttk.Label(parent, text="Step 3: Extracted Message", 
@@ -298,6 +298,10 @@ class SteganographyApp:
             messagebox.showwarning("Warning", "Please enter a message to hide")
             return
         
+        if not password:
+            messagebox.showwarning("Warning", "Password is required. Please enter a password to protect your message.")
+            return
+        
         try:
             # Hide the message
             self.set_hide_status("Processing... hiding message...", "#0099FF")
@@ -324,9 +328,8 @@ class SteganographyApp:
                         "save in PNG or BMP format instead.")
                 
                 save_image(stego_image, save_path)
-                pwd_info = f" (Password protected)" if password else " (No password)"
-                self.set_hide_status(f"✓ Message hidden successfully!{pwd_info} Saved: {os.path.basename(save_path)}", "green")
-                messagebox.showinfo("Success", f"Message hidden successfully!{pwd_info}\n\nSaved to:\n{save_path}")
+                self.set_hide_status(f"✓ Message hidden successfully! (Password protected) Saved: {os.path.basename(save_path)}", "green")
+                messagebox.showinfo("Success", f"Message hidden successfully with password protection!\n\nSaved to:\n{save_path}")
             else:
                 self.set_hide_status("Save cancelled", "#999999")
         
@@ -344,6 +347,10 @@ class SteganographyApp:
             return
         
         password = self.extract_password_text.get()
+        
+        if not password:
+            messagebox.showwarning("Warning", "Password is required to extract the message.")
+            return
         
         try:
             self.set_extract_status("Processing... extracting message...", "#0099FF")

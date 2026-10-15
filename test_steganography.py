@@ -2,7 +2,7 @@
 Unit Tests for the Steganography Module
 
 This test suite validates the core functionality:
-- Hiding and extracting messages
+- Hiding and extracting messages with password protection
 - Unicode text handling
 - Image capacity checks
 - Error handling
@@ -22,6 +22,7 @@ class TestSteganography(unittest.TestCase):
         """Create a test image before each test"""
         self.test_image = create_test_image(200, 200)
         self.temp_dir = tempfile.mkdtemp()
+        self.test_password = "test_password_123"
     
     def tearDown(self):
         """Clean up temporary files after each test"""
@@ -34,11 +35,11 @@ class TestSteganography(unittest.TestCase):
         """Test hiding and extracting a simple text message"""
         message = "Hello, World!"
         
-        # Hide the message
-        stego_image = hide_message(self.test_image, message)
+        # Hide the message with password
+        stego_image = hide_message(self.test_image, message, self.test_password)
         
-        # Extract the message
-        extracted = extract_message(stego_image)
+        # Extract the message with password
+        extracted = extract_message(stego_image, self.test_password)
         
         # Verify
         self.assertEqual(message, extracted)
@@ -49,8 +50,8 @@ class TestSteganography(unittest.TestCase):
         """Test hiding and extracting an empty message"""
         message = ""
         
-        stego_image = hide_message(self.test_image, message)
-        extracted = extract_message(stego_image)
+        stego_image = hide_message(self.test_image, message, self.test_password)
+        extracted = extract_message(stego_image, self.test_password)
         
         self.assertEqual(message, extracted)
         print("✓ Test 2 Passed: Empty message handling")
@@ -60,8 +61,8 @@ class TestSteganography(unittest.TestCase):
         """Test hiding and extracting Unicode text"""
         message = "Hello! 你好! مرحبا! 🎉"
         
-        stego_image = hide_message(self.test_image, message)
-        extracted = extract_message(stego_image)
+        stego_image = hide_message(self.test_image, message, self.test_password)
+        extracted = extract_message(stego_image, self.test_password)
         
         self.assertEqual(message, extracted)
         print("✓ Test 3 Passed: Unicode text handling")
@@ -71,8 +72,8 @@ class TestSteganography(unittest.TestCase):
         """Test hiding and extracting a long message"""
         message = "The quick brown fox jumps over the lazy dog. " * 10
         
-        stego_image = hide_message(self.test_image, message)
-        extracted = extract_message(stego_image)
+        stego_image = hide_message(self.test_image, message, self.test_password)
+        extracted = extract_message(stego_image, self.test_password)
         
         self.assertEqual(message, extracted)
         print("✓ Test 4 Passed: Long message handling")
@@ -85,7 +86,7 @@ class TestSteganography(unittest.TestCase):
         message = "A" * (max_size + 100)
         
         with self.assertRaises(ValueError):
-            hide_message(self.test_image, message)
+            hide_message(self.test_image, message, self.test_password)
         print("✓ Test 5 Passed: Message capacity check")
     
     # Test 6: Maximum capacity message
@@ -95,8 +96,8 @@ class TestSteganography(unittest.TestCase):
         # Create a message at max size (but use safe characters)
         message = "A" * max_size
         
-        stego_image = hide_message(self.test_image, message)
-        extracted = extract_message(stego_image)
+        stego_image = hide_message(self.test_image, message, self.test_password)
+        extracted = extract_message(stego_image, self.test_password)
         
         self.assertEqual(message, extracted)
         print("✓ Test 6 Passed: Maximum capacity message")
@@ -108,7 +109,7 @@ class TestSteganography(unittest.TestCase):
         message = "Secret"
         
         # Hide message (should not modify original)
-        stego_image = hide_message(self.test_image, message)
+        stego_image = hide_message(self.test_image, message, self.test_password)
         
         # Check original is unchanged
         current_pixels = list(self.test_image.getdata())
@@ -121,8 +122,8 @@ class TestSteganography(unittest.TestCase):
         message1 = "First message"
         message2 = "Second message"
         
-        stego1 = hide_message(self.test_image, message1)
-        stego2 = hide_message(self.test_image, message2)
+        stego1 = hide_message(self.test_image, message1, self.test_password)
+        stego2 = hide_message(self.test_image, message2, self.test_password)
         
         pixels1 = list(stego1.getdata())
         pixels2 = list(stego2.getdata())
@@ -131,17 +132,17 @@ class TestSteganography(unittest.TestCase):
         self.assertNotEqual(pixels1, pixels2)
         print("✓ Test 8 Passed: Different messages produce different images")
     
-    # Test 9: Extract from image without message
-    def test_extract_from_clean_image(self):
-        """Test extracting from an image without a hidden message"""
-        # Don't hide anything, just try to extract
-        try:
-            extracted = extract_message(self.test_image)
-            # If it succeeds, it should be empty or garbage that fails UTF-8
-            print("✓ Test 9 Passed: Clean image extraction handled")
-        except (ValueError, UnicodeDecodeError):
-            # This is expected - image has garbage data
-            print("✓ Test 9 Passed: Clean image extraction handled (ValueError)")
+    # Test 9: Wrong password detection
+    def test_wrong_password_detection(self):
+        """Test that wrong password is detected"""
+        message = "Secret message"
+        
+        stego_image = hide_message(self.test_image, message, self.test_password)
+        
+        # Try to extract with wrong password
+        with self.assertRaises(ValueError):
+            extract_message(stego_image, "wrong_password")
+        print("✓ Test 9 Passed: Wrong password detection")
     
     # Test 10: Save and load workflow
     def test_save_and_load_workflow(self):
@@ -149,7 +150,7 @@ class TestSteganography(unittest.TestCase):
         message = "Save and load test"
         
         # Hide message
-        stego_image = hide_message(self.test_image, message)
+        stego_image = hide_message(self.test_image, message, self.test_password)
         
         # Save to file
         stego_path = os.path.join(self.temp_dir, "stego.png")
@@ -159,7 +160,7 @@ class TestSteganography(unittest.TestCase):
         loaded_image = load_image(stego_path)
         
         # Extract message
-        extracted = extract_message(loaded_image)
+        extracted = extract_message(loaded_image, self.test_password)
         
         # Verify
         self.assertEqual(message, extracted)
@@ -170,8 +171,8 @@ class TestSteganography(unittest.TestCase):
         """Test hiding and extracting special characters"""
         message = "!@#$%^&*()_+-=[]{}|;:',.<>?/\\"
         
-        stego_image = hide_message(self.test_image, message)
-        extracted = extract_message(stego_image)
+        stego_image = hide_message(self.test_image, message, self.test_password)
+        extracted = extract_message(stego_image, self.test_password)
         
         self.assertEqual(message, extracted)
         print("✓ Test 11 Passed: Special characters handling")
@@ -181,8 +182,8 @@ class TestSteganography(unittest.TestCase):
         """Test that whitespace is preserved"""
         message = "Line 1\nLine 2\n\tIndented\r\nWindows line"
         
-        stego_image = hide_message(self.test_image, message)
-        extracted = extract_message(stego_image)
+        stego_image = hide_message(self.test_image, message, self.test_password)
+        extracted = extract_message(stego_image, self.test_password)
         
         self.assertEqual(message, extracted)
         print("✓ Test 12 Passed: Whitespace preservation")

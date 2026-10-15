@@ -43,13 +43,15 @@ def get_max_message_size(image: Image.Image) -> int:
 def hide_message(image: Image.Image, message: str) -> Image.Image:
     """
     Hide a secret message inside an image using LSB steganography.
+    Works with any image format (JPEG, PNG, BMP, GIF, TIFF, etc.)
+    automatically converts to RGB for processing.
     
     Args:
-        image: PIL Image object (must be RGB or convertible to RGB)
+        image: PIL Image object (any format, will be converted to RGB)
         message: Secret message string to hide
         
     Returns:
-        New PIL Image with the hidden message
+        New PIL Image with the hidden message (RGB format)
         
     Raises:
         ValueError: If message is too large for the image
@@ -74,7 +76,7 @@ def hide_message(image: Image.Image, message: str) -> Image.Image:
             f"Attempted: {message_length} bytes"
         )
     
-    # Convert image to RGB mode (in case it's RGBA, etc.)
+    # Convert image to RGB mode (handles JPEG, RGBA, grayscale, etc.)
     if image.mode != 'RGB':
         image = image.convert('RGB')
     
@@ -115,9 +117,11 @@ def hide_message(image: Image.Image, message: str) -> Image.Image:
 def extract_message(image: Image.Image) -> str:
     """
     Extract a hidden message from an image using LSB steganography.
+    Works with any image format (JPEG, PNG, BMP, GIF, TIFF, etc.)
+    automatically converts to RGB for processing.
     
     Args:
-        image: PIL Image object containing a hidden message
+        image: PIL Image object containing a hidden message (any format)
         
     Returns:
         Extracted message string
@@ -130,7 +134,7 @@ def extract_message(image: Image.Image) -> str:
     if not isinstance(image, Image.Image):
         raise TypeError("Image must be a PIL Image object")
     
-    # Convert image to RGB mode if needed
+    # Convert image to RGB mode if needed (handles JPEG, RGBA, grayscale, etc.)
     if image.mode != 'RGB':
         image = image.convert('RGB')
     

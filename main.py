@@ -80,7 +80,7 @@ class SteganographyApp:
         parent.rowconfigure(5, weight=1)
         
         # Image selection section
-        ttk.Label(parent, text="Step 1: Select Cover Image (PNG)", 
+        ttk.Label(parent, text="Step 1: Select Cover Image (Any Format: PNG, JPEG, BMP, etc.)", 
                  font=("Arial", 11, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 10))
         
         img_frame = ttk.Frame(parent)
@@ -172,8 +172,9 @@ class SteganographyApp:
     def select_hide_image(self):
         """Handle hide image selection"""
         file_path = filedialog.askopenfilename(
-            title="Select PNG Image",
-            filetypes=[("PNG Images", "*.png"), ("All Images", "*.*")]
+            title="Select Image (Any Format: PNG, JPEG, BMP, GIF, etc.)",
+            filetypes=[("All Images", "*.*"), ("PNG Images", "*.png"), ("JPEG Images", "*.jpg *.jpeg"), 
+                      ("BMP Images", "*.bmp"), ("GIF Images", "*.gif"), ("TIFF Images", "*.tiff *.tif")]
         )
         
         if file_path:
@@ -210,8 +211,9 @@ class SteganographyApp:
     def select_extract_image(self):
         """Handle extract image selection"""
         file_path = filedialog.askopenfilename(
-            title="Select Image with Hidden Message",
-            filetypes=[("PNG Images", "*.png"), ("All Images", "*.*")]
+            title="Select Image with Hidden Message (Any Format: PNG, JPEG, BMP, GIF, etc.)",
+            filetypes=[("All Images", "*.*"), ("PNG Images", "*.png"), ("JPEG Images", "*.jpg *.jpeg"),
+                      ("BMP Images", "*.bmp"), ("GIF Images", "*.gif"), ("TIFF Images", "*.tiff *.tif")]
         )
         
         if file_path:
@@ -273,11 +275,21 @@ class SteganographyApp:
             # Ask user where to save
             save_path = filedialog.asksaveasfilename(
                 defaultextension=".png",
-                filetypes=[("PNG Images", "*.png")],
+                filetypes=[("PNG Image (Recommended)", "*.png"), ("BMP Image", "*.bmp"), 
+                          ("All Files", "*.*")],
                 initialfile="stego.png"
             )
             
             if save_path:
+                # Show info about format
+                if save_path.lower().endswith(('.jpg', '.jpeg', '.gif')):
+                    messagebox.showinfo("Format Notice", 
+                        "⚠️ Note: JPEG and GIF are lossy formats.\n\n"
+                        "For best results and to preserve hidden messages,\n"
+                        "PNG or BMP (lossless formats) are recommended.\n\n"
+                        "If you need to extract this message later,\n"
+                        "save in PNG or BMP format instead.")
+                
                 save_image(stego_image, save_path)
                 self.set_hide_status(f"✓ Message hidden successfully! Saved to: {os.path.basename(save_path)}", "green")
                 messagebox.showinfo("Success", f"Message hidden successfully!\n\nSaved to:\n{save_path}")

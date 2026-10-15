@@ -13,12 +13,14 @@ from typing import Tuple, Optional
 def load_image(image_path: str) -> Image.Image:
     """
     Load an image from the given file path.
+    Accepts any image format (JPEG, PNG, BMP, GIF, TIFF, etc.)
+    and automatically converts to RGB for consistent processing.
     
     Args:
-        image_path: Path to the image file
+        image_path: Path to the image file (any format)
         
     Returns:
-        PIL Image object
+        PIL Image object in RGB mode
         
     Raises:
         FileNotFoundError: If the file doesn't exist
@@ -31,6 +33,11 @@ def load_image(image_path: str) -> Image.Image:
         image = Image.open(image_path)
         # Validate that it's actually an image by checking if we can load it
         image.load()
+        
+        # Convert to RGB for consistent processing (handles JPEG, PNG, RGBA, grayscale, etc.)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
         return image
     except Exception as e:
         raise ValueError(f"Failed to load image: {e}")
@@ -58,8 +65,13 @@ def save_image(image: Image.Image, output_path: str, format: str = 'PNG') -> Non
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
-        # Save with specified format
-        image.save(output_path, format=format)
+        # Determine format from file extension if not specified
+        if format == 'PNG':
+            # Force PNG for lossless saving
+            image.save(output_path, format='PNG')
+        else:
+            # Save with detected or specified format
+            image.save(output_path, format=format)
     except Exception as e:
         raise ValueError(f"Failed to save image: {e}")
 
@@ -67,6 +79,7 @@ def save_image(image: Image.Image, output_path: str, format: str = 'PNG') -> Non
 def validate_image_for_steganography(image_path: str) -> Tuple[bool, str]:
     """
     Validate that an image is suitable for steganography.
+    Accepts any image format (JPEG, PNG, BMP, GIF, TIFF, etc.)
     
     Args:
         image_path: Path to the image file
@@ -79,20 +92,12 @@ def validate_image_for_steganography(image_path: str) -> Tuple[bool, str]:
     except (FileNotFoundError, ValueError) as e:
         return False, f"Cannot load image: {e}"
     
-    # Check image mode
-    if image.mode not in ['RGB', 'RGBA', 'L', 'P']:
-        return False, f"Unsupported image mode: {image.mode}"
-    
-    # Check minimum image size (at least 100x100)
+    # Check image size (at least 100x100 for practical use)
     width, height = image.size
     if width < 100 or height < 100:
         return False, f"Image too small: {width}x{height}. Minimum recommended: 100x100"
     
-    # Check file format (PNG is best for lossless storage)
-    _, file_ext = os.path.splitext(image_path)
-    if file_ext.lower() not in ['.png', '.bmp', '.gif', '.tiff']:
-        return False, f"Lossy format detected: {file_ext}. Use PNG or BMP for lossless storage."
-    
+    # All formats are now accepted (auto-converted to RGB)
     return True, "Image is suitable for steganography"
 
 

@@ -5,7 +5,7 @@ A Tkinter-based graphical interface for hiding and extracting secret messages
 in digital images using LSB (Least Significant Bit) steganography.
 
 Features:
-- Hide secret messages in PNG images
+- Hide secret messages in any image format (PNG, JPEG, BMP, GIF, etc.)
 - Extract hidden messages from images
 - Real-time capacity checking
 - User-friendly interface with clear feedback
@@ -26,7 +26,7 @@ class SteganographyApp:
         """Initialize the application"""
         self.root = root
         self.root.title("Image Steganography System")
-        self.root.geometry("800x700")
+        self.root.geometry("900x800")
         self.root.resizable(True, True)
         
         # Store current image paths and objects
@@ -41,20 +41,20 @@ class SteganographyApp:
     def create_widgets(self):
         """Create all GUI elements"""
         # Main container
-        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame = ttk.Frame(self.root, padding="15")
         main_frame.grid(row=0, column=0, sticky="nsew")
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         
         # Title
         title_label = ttk.Label(main_frame, text="Image Steganography System", 
-                               font=("Arial", 16, "bold"))
+                               font=("Arial", 22, "bold"))
         title_label.grid(row=0, column=0, columnspan=2, pady=(0, 10))
         
         # Subtitle
         subtitle = ttk.Label(main_frame, 
-                            text="Hide and extract secret messages in PNG images using LSB technology",
-                            font=("Arial", 10, "italic"), foreground="gray")
+                            text="Hide and extract secret messages in any image format (PNG, JPEG, BMP, GIF, etc.) using LSB technology",
+                            font=("Arial", 12))
         subtitle.grid(row=1, column=0, columnspan=2, pady=(0, 20))
         
         # Create notebook for tabs
@@ -80,35 +80,36 @@ class SteganographyApp:
         parent.rowconfigure(5, weight=1)
         
         # Image selection section
-        ttk.Label(parent, text="Step 1: Select Cover Image (Any Format: PNG, JPEG, BMP, etc.)", 
-                 font=("Arial", 11, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 10))
+        ttk.Label(parent, text="Step 1: Select Cover Image (Any Format)", 
+                 font=("Arial", 14, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 10))
         
         img_frame = ttk.Frame(parent)
         img_frame.grid(row=1, column=0, sticky="ew", pady=(0, 15))
         img_frame.columnconfigure(1, weight=1)
         
+        ttk.Button(img_frame, text="Browse", 
+                  command=self.select_hide_image).grid(row=0, column=0, sticky="w", padx=(0, 10))
+        
         self.hide_image_label = ttk.Label(img_frame, text="No image selected", 
-                                          foreground="gray")
+                                          font=("Arial", 12))
         self.hide_image_label.grid(row=0, column=1, sticky="w", padx=10)
         
-        ttk.Button(img_frame, text="Browse", 
-                  command=self.select_hide_image).grid(row=0, column=0, sticky="w")
-        
         # Image info
-        self.hide_info_label = ttk.Label(parent, text="", foreground="blue")
+        self.hide_info_label = ttk.Label(parent, text="", font=("Arial", 12))
         self.hide_info_label.grid(row=2, column=0, sticky="w", pady=(0, 15))
         
         # Message input section
         ttk.Label(parent, text="Step 2: Enter Secret Message", 
-                 font=("Arial", 11, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 10))
+                 font=("Arial", 14, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 10))
         
-        self.hide_message_text = tk.Text(parent, height=6, wrap="word", 
-                                         font=("Arial", 10))
+        self.hide_message_text = tk.Text(parent, height=8, wrap="word", 
+                                         font=("Arial", 12), bg="#2d2d2d", fg="#ffffff", 
+                                         insertbackground="#ffffff", relief="solid", borderwidth=1)
         self.hide_message_text.grid(row=4, column=0, sticky="nsew", pady=(0, 15))
         self.hide_message_text.bind("<KeyRelease>", self.update_hide_capacity)
         
         # Capacity indicator
-        self.hide_capacity_label = ttk.Label(parent, text="", foreground="green")
+        self.hide_capacity_label = ttk.Label(parent, text="", font=("Arial", 12))
         self.hide_capacity_label.grid(row=5, column=0, sticky="w", pady=(0, 15))
         
         # Buttons frame
@@ -122,7 +123,7 @@ class SteganographyApp:
                   command=self.clear_hide_tab).pack(side="left", padx=5)
         
         # Status label
-        self.hide_status_label = ttk.Label(parent, text="", font=("Arial", 10))
+        self.hide_status_label = ttk.Label(parent, text="", font=("Arial", 12))
         self.hide_status_label.grid(row=7, column=0, sticky="w", pady=(0, 10))
     
     def create_extract_tab(self, parent):
@@ -132,25 +133,27 @@ class SteganographyApp:
         
         # Image selection section
         ttk.Label(parent, text="Step 1: Select Image with Hidden Message", 
-                 font=("Arial", 11, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 10))
+                 font=("Arial", 14, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 10))
         
         img_frame = ttk.Frame(parent)
         img_frame.grid(row=1, column=0, sticky="ew", pady=(0, 15))
         img_frame.columnconfigure(1, weight=1)
         
-        self.extract_image_label = ttk.Label(img_frame, text="No image selected", 
-                                             foreground="gray")
-        self.extract_image_label.grid(row=0, column=1, sticky="w", padx=10)
-        
         ttk.Button(img_frame, text="Browse", 
-                  command=self.select_extract_image).grid(row=0, column=0, sticky="w")
+                  command=self.select_extract_image).grid(row=0, column=0, sticky="w", padx=(0, 10))
+        
+        self.extract_image_label = ttk.Label(img_frame, text="No image selected", 
+                                             font=("Arial", 12))
+        self.extract_image_label.grid(row=0, column=1, sticky="w", padx=10)
         
         # Message display section
         ttk.Label(parent, text="Step 2: Extracted Message", 
-                 font=("Arial", 11, "bold")).grid(row=2, column=0, sticky="w", pady=(0, 10))
+                 font=("Arial", 14, "bold")).grid(row=2, column=0, sticky="w", pady=(0, 10))
         
         self.extract_message_text = tk.Text(parent, height=8, wrap="word", 
-                                            font=("Arial", 10), state="disabled")
+                                            font=("Arial", 12), bg="#2d2d2d", fg="#ffffff",
+                                            insertbackground="#ffffff", relief="solid", borderwidth=1,
+                                            state="disabled")
         self.extract_message_text.grid(row=3, column=0, sticky="nsew", pady=(0, 15))
         
         # Buttons frame
@@ -166,7 +169,7 @@ class SteganographyApp:
                   command=self.clear_extract_tab).pack(side="left", padx=5)
         
         # Status label
-        self.extract_status_label = ttk.Label(parent, text="", font=("Arial", 10))
+        self.extract_status_label = ttk.Label(parent, text="", font=("Arial", 12))
         self.extract_status_label.grid(row=5, column=0, sticky="w", pady=(0, 10))
     
     def select_hide_image(self):
@@ -191,18 +194,17 @@ class SteganographyApp:
                 
                 # Update label
                 filename = os.path.basename(file_path)
-                self.hide_image_label.config(text=filename, foreground="black")
+                self.hide_image_label.config(text=filename)
                 
                 # Show image info
                 max_size = get_max_message_size(self.hide_image)
-                info_text = f"Image: {self.hide_image.width}x{self.hide_image.height} | " \
-                           f"Max capacity: {max_size} bytes"
-                self.hide_info_label.config(text=info_text, foreground="blue")
+                info_text = f"Image: {self.hide_image.width}×{self.hide_image.height} | Max capacity: {max_size} bytes"
+                self.hide_info_label.config(text=info_text)
                 
                 # Clear previous message
                 self.hide_message_text.delete("1.0", tk.END)
                 self.update_hide_capacity()
-                self.set_hide_status("Image loaded successfully", "green")
+                self.set_hide_status("✓ Image loaded successfully", "green")
                 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load image: {e}")
@@ -222,9 +224,9 @@ class SteganographyApp:
                 self.extract_image_path = file_path
                 
                 filename = os.path.basename(file_path)
-                self.extract_image_label.config(text=filename, foreground="black")
+                self.extract_image_label.config(text=filename)
                 
-                self.set_extract_status("Image loaded. Click 'Extract Message' to proceed.", "green")
+                self.set_extract_status("✓ Image loaded. Click 'Extract Message' to proceed.", "green")
                 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load image: {e}")
@@ -245,7 +247,7 @@ class SteganographyApp:
             color = "red"
             text = f"❌ Message too large! Excess: {abs(remaining)} bytes"
         elif remaining < 100:
-            color = "orange"
+            color = "#FFA500"  # Orange
             text = f"⚠️  Message size: {message_bytes} / {max_size} bytes (Remaining: {remaining})"
         else:
             color = "green"
@@ -267,7 +269,7 @@ class SteganographyApp:
         
         try:
             # Hide the message
-            self.set_hide_status("Processing... hiding message...", "blue")
+            self.set_hide_status("Processing... hiding message...", "#0099FF")
             self.root.update()
             
             stego_image = hide_message(self.hide_image, message)
@@ -294,7 +296,7 @@ class SteganographyApp:
                 self.set_hide_status(f"✓ Message hidden successfully! Saved to: {os.path.basename(save_path)}", "green")
                 messagebox.showinfo("Success", f"Message hidden successfully!\n\nSaved to:\n{save_path}")
             else:
-                self.set_hide_status("Save cancelled", "gray")
+                self.set_hide_status("Save cancelled", "#999999")
         
         except ValueError as e:
             messagebox.showerror("Error", str(e))
@@ -310,7 +312,7 @@ class SteganographyApp:
             return
         
         try:
-            self.set_extract_status("Processing... extracting message...", "blue")
+            self.set_extract_status("Processing... extracting message...", "#0099FF")
             self.root.update()
             
             message = extract_message(self.extract_image)

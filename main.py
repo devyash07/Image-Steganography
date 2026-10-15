@@ -77,7 +77,7 @@ class SteganographyApp:
     def create_hide_tab(self, parent):
         """Create the Hide Message tab"""
         parent.columnconfigure(0, weight=1)
-        parent.rowconfigure(5, weight=1)
+        parent.rowconfigure(6, weight=1)
         
         # Image selection section
         ttk.Label(parent, text="Step 1: Select Cover Image (Any Format)", 
@@ -102,7 +102,7 @@ class SteganographyApp:
         ttk.Label(parent, text="Step 2: Enter Secret Message", 
                  font=("Arial", 14, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 10))
         
-        self.hide_message_text = tk.Text(parent, height=8, wrap="word", 
+        self.hide_message_text = tk.Text(parent, height=6, wrap="word", 
                                          font=("Arial", 12), bg="#2d2d2d", fg="#ffffff", 
                                          insertbackground="#ffffff", relief="solid", borderwidth=1)
         self.hide_message_text.grid(row=4, column=0, sticky="nsew", pady=(0, 15))
@@ -112,9 +112,24 @@ class SteganographyApp:
         self.hide_capacity_label = ttk.Label(parent, text="", font=("Arial", 12))
         self.hide_capacity_label.grid(row=5, column=0, sticky="w", pady=(0, 15))
         
+        # Password section
+        ttk.Label(parent, text="Step 3: Optional Password Protection", 
+                 font=("Arial", 14, "bold")).grid(row=6, column=0, sticky="w", pady=(0, 10))
+        
+        pwd_frame = ttk.Frame(parent)
+        pwd_frame.grid(row=7, column=0, sticky="ew", pady=(0, 15))
+        pwd_frame.columnconfigure(1, weight=1)
+        
+        ttk.Label(pwd_frame, text="Password (optional):", font=("Arial", 12)).grid(row=0, column=0, sticky="w", padx=(0, 10))
+        
+        self.hide_password_text = ttk.Entry(pwd_frame, show="*", font=("Arial", 12))
+        self.hide_password_text.grid(row=0, column=1, sticky="ew", padx=(0, 10))
+        
+        ttk.Label(pwd_frame, text="Leave empty for no password", font=("Arial", 10), foreground="#666666").grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
+        
         # Buttons frame
         button_frame = ttk.Frame(parent)
-        button_frame.grid(row=6, column=0, sticky="ew", pady=20)
+        button_frame.grid(row=8, column=0, sticky="ew", pady=20)
         button_frame.columnconfigure(0, weight=1)
         
         ttk.Button(button_frame, text="Hide Message", 
@@ -124,7 +139,7 @@ class SteganographyApp:
         
         # Status label
         self.hide_status_label = ttk.Label(parent, text="", font=("Arial", 12))
-        self.hide_status_label.grid(row=7, column=0, sticky="w", pady=(0, 10))
+        self.hide_status_label.grid(row=9, column=0, sticky="w", pady=(0, 10))
     
     def create_extract_tab(self, parent):
         """Create the Extract Message tab"""
@@ -146,19 +161,34 @@ class SteganographyApp:
                                              font=("Arial", 12))
         self.extract_image_label.grid(row=0, column=1, sticky="w", padx=10)
         
-        # Message display section
-        ttk.Label(parent, text="Step 2: Extracted Message", 
+        # Password section
+        ttk.Label(parent, text="Step 2: Enter Password (if used)", 
                  font=("Arial", 14, "bold")).grid(row=2, column=0, sticky="w", pady=(0, 10))
+        
+        pwd_frame = ttk.Frame(parent)
+        pwd_frame.grid(row=3, column=0, sticky="ew", pady=(0, 15))
+        pwd_frame.columnconfigure(1, weight=1)
+        
+        ttk.Label(pwd_frame, text="Password (optional):", font=("Arial", 12)).grid(row=0, column=0, sticky="w", padx=(0, 10))
+        
+        self.extract_password_text = ttk.Entry(pwd_frame, show="*", font=("Arial", 12))
+        self.extract_password_text.grid(row=0, column=1, sticky="ew", padx=(0, 10))
+        
+        ttk.Label(pwd_frame, text="Leave empty if no password was used", font=("Arial", 10), foreground="#666666").grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
+        
+        # Message display section
+        ttk.Label(parent, text="Step 3: Extracted Message", 
+                 font=("Arial", 14, "bold")).grid(row=4, column=0, sticky="w", pady=(0, 10))
         
         self.extract_message_text = tk.Text(parent, height=8, wrap="word", 
                                             font=("Arial", 12), bg="#2d2d2d", fg="#ffffff",
                                             insertbackground="#ffffff", relief="solid", borderwidth=1,
                                             state="disabled")
-        self.extract_message_text.grid(row=3, column=0, sticky="nsew", pady=(0, 15))
+        self.extract_message_text.grid(row=5, column=0, sticky="nsew", pady=(0, 15))
         
         # Buttons frame
         button_frame = ttk.Frame(parent)
-        button_frame.grid(row=4, column=0, sticky="ew", pady=20)
+        button_frame.grid(row=6, column=0, sticky="ew", pady=20)
         button_frame.columnconfigure(0, weight=1)
         
         ttk.Button(button_frame, text="Extract Message", 
@@ -170,7 +200,7 @@ class SteganographyApp:
         
         # Status label
         self.extract_status_label = ttk.Label(parent, text="", font=("Arial", 12))
-        self.extract_status_label.grid(row=5, column=0, sticky="w", pady=(0, 10))
+        self.extract_status_label.grid(row=7, column=0, sticky="w", pady=(0, 10))
     
     def select_hide_image(self):
         """Handle hide image selection"""
@@ -262,6 +292,7 @@ class SteganographyApp:
             return
         
         message = self.hide_message_text.get("1.0", tk.END).rstrip("\n")
+        password = self.hide_password_text.get()
         
         if not message:
             messagebox.showwarning("Warning", "Please enter a message to hide")
@@ -272,7 +303,7 @@ class SteganographyApp:
             self.set_hide_status("Processing... hiding message...", "#0099FF")
             self.root.update()
             
-            stego_image = hide_message(self.hide_image, message)
+            stego_image = hide_message(self.hide_image, message, password)
             
             # Ask user where to save
             save_path = filedialog.asksaveasfilename(
@@ -293,8 +324,9 @@ class SteganographyApp:
                         "save in PNG or BMP format instead.")
                 
                 save_image(stego_image, save_path)
-                self.set_hide_status(f"✓ Message hidden successfully! Saved to: {os.path.basename(save_path)}", "green")
-                messagebox.showinfo("Success", f"Message hidden successfully!\n\nSaved to:\n{save_path}")
+                pwd_info = f" (Password protected)" if password else " (No password)"
+                self.set_hide_status(f"✓ Message hidden successfully!{pwd_info} Saved: {os.path.basename(save_path)}", "green")
+                messagebox.showinfo("Success", f"Message hidden successfully!{pwd_info}\n\nSaved to:\n{save_path}")
             else:
                 self.set_hide_status("Save cancelled", "#999999")
         
@@ -311,11 +343,13 @@ class SteganographyApp:
             messagebox.showwarning("Warning", "Please select an image first")
             return
         
+        password = self.extract_password_text.get()
+        
         try:
             self.set_extract_status("Processing... extracting message...", "#0099FF")
             self.root.update()
             
-            message = extract_message(self.extract_image)
+            message = extract_message(self.extract_image, password)
             
             # Display the message
             self.extract_message_text.config(state="normal")
@@ -346,12 +380,14 @@ class SteganographyApp:
     def clear_hide_tab(self):
         """Clear the hide tab"""
         self.hide_message_text.delete("1.0", tk.END)
+        self.hide_password_text.delete(0, tk.END)
         self.hide_capacity_label.config(text="")
         self.hide_status_label.config(text="")
         self.update_hide_capacity()
     
     def clear_extract_tab(self):
         """Clear the extract tab"""
+        self.extract_password_text.delete(0, tk.END)
         self.extract_message_text.config(state="normal")
         self.extract_message_text.delete("1.0", tk.END)
         self.extract_message_text.config(state="disabled")
